@@ -1,0 +1,70 @@
+gameLogic
+extern actor* extraLife[2];
+
+char extraLifeSprite[] = {0x38,0x30,0x30,0x30,0x30,0x7C};
+
+void LEDGainLife(){
+	if(lives >= 1 && lives < 3)
+	{
+		lives++;
+		if(lives>=1)
+		{
+			LPC_GPIO1->FIOSET |= 1<<28;
+			if(lives>=2)
+			{
+				LPC_GPIO1->FIOSET |= 1<<29;		
+				if(lives == 3)
+				{
+					LPC_GPIO1->FIOSET |= 1<<31;
+				}
+			}
+		}
+	}
+}
+
+void enemyShootExtraLife(actor* enemy)
+{
+	//put it in the middle
+	extraLife[ENEMY_LASER]->horizontalPosition = enemy->horizontalPosition + (SPRITE_ROWS-2)*SPRITE_SCALE/2;
+	extraLife[ENEMY_LASER]->verticalPosition = enemy->verticalPosition - (SPRITE_COLS-1)*SPRITE_SCALE;
+	extraLife[ENEMY_LASER]->dir = -1;
+}
+
+in animate
+
+if(rand() > EXTRALIFE_SHOT_CHANCE && extraLife[ENEMY_LASER]->dir == 0){
+			enemyShootExtraLife(enemy);
+		}
+
+if(extraLife[1]->dir != 0)
+printLaser(extraLife[ENEMY_LASER]);
+
+in checkCollide
+else if(checkCollision(player,extraLife[1],1) && extraLife[1] -> dir != 0)
+		{
+			LEDGainLife();
+			extraLife[ENEMY_LASER]->dir = 0;
+			
+		}
+
+	extraLife[ENEMY_LASER] = malloc(sizeof(actor));
+	extraLife[ENEMY_LASER]->horizontalPosition = 0;
+	extraLife[ENEMY_LASER]->verticalPosition = 0;
+	extraLife[ENEMY_LASER]->speed = EXTRALIFE_SPEED;
+	extraLife[ENEMY_LASER]->dir = 0;
+	extraLife[ENEMY_LASER]->sprite = extraLifeSprite;
+
+in p2_main
+actor* extraLife[2];
+
+in gameLogic.h
+void enemyShootExtraLife(actor* enemy);
+
+in spece.h
+#define EXTRALIFE_SHOT_CHANCE 20000
+#define ENEMY_LASER_SPEED SPRITE_ROWS*SPRITE_SCALE + 5
+#define BLACKHOLE_SPEED SPRITE_ROWS*SPRITE_SCALE - 1
+#define EXTRALIFE_SPEED SPRITE_ROWS*SPRITE_SCALE + 10
+
+
+
